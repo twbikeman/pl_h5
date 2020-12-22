@@ -1,4 +1,4 @@
-
+; dominoes
 
 (define (range x)
   (if (< x 0) '() (cons x (range (- x 1))))
@@ -43,81 +43,64 @@
 
 (define (flip t) (cons (cdr t) (car t)))
 
-(define (match x y) (cond 
-			   ((= (cdr x) (car y)) (cons (car x) (cdr y)))
-			   ((= (cdr x) (cdr y)) (cons (car x) (car y)))
-			   (#t (cons -1 -2))
-			   )
+(define (first-flip-list x)
+  (cons (flip (car x)) (cdr x))
+  
   )
 
 
-(define (first items)
-   (cons(cons (cdr (car items)) (car (car items))) (cdr items))     
+
+(define (pair-eq? x y)
+  (cond
+   ((= (cdr x) (car y)) #t)
+   (#t #f)
    )
-
-
-(define (reduce f l)
-  (if (= (length l) 1) l 
-       (reduce f (cons (f (car l) (car (cdr l))) (cdr (cdr l))))
-      )
-    )
-
-(define (verify items)
-  (if (= (car (car items)) (cdr (car items))) #t #f)
   )
 
 
+(define (match inp res)
+  (cond
+   ((null? res) (match (cdr inp) (cons (car inp) res)))
+   ((and (null? inp) (pair-eq? (car res) (car (reverse res)))) (reverse res))
+   ((and (null? inp) (not (pair-eq? (car res) (car (reverse res))))) '())
+   ((pair-eq? (car res) (car inp)) (match (cdr inp) (cons (car inp) res)))
+   ((pair-eq? (car res) (flip (car inp))) (match (cdr inp) (cons (flip (car inp)) res)))
+   (#t '())
+   )
+  )
 
-(define (loop-helper r l)
-  (cond ((null? l) r)
+(define (match-full inp res)
+  (append (match inp res) (match (first-flip-list inp) res))
+  )
 
-	((eq? (last-pair r) (car l)) (loop-helper (cons r (car l)) (cdr l)))
-	
-      
-      )
-
+(define (loop? L)
+  (match-full L '())
   )
 
 
-
-
-(define (loop? items)
-  (verify (reduce match items))
+(define (test-filter x)
+  (if (>= x 5) x '())
   )
 
-;; domino-loops
-
-(define (filter-help pred lst res) 
-  (cond ((null? lst) res)
-	((pred (car lst)) (filter-help pred (cdr lst) (cons (car lst) res)))
-	(#t (filter-help pred (cdr lst) res))      
+(define filter
+  (lambda (f L)
+    (if (null? L) L
+	(let ((N (f (car L))))
+			      (if (null? N)
+				  (filter f (cdr L))
+				  (cons N (filter f (cdr L)))
+				  )
+			      )	
 	)
+    )
+  )
+
+(define domino-loops
+
+  (lambda (n) (filter loop? (permutations (dominoes n))))
   )
 
 
-
-
-
-(define (domino-loops n)
-  (append (reverse (filter-help loop? (permutations (dominoes n)) '()))     (reverse (filter-help loop? (map first (permutations (dominoes n))) '())))
-  )
-
-
-;; (define (adjust-help r l)
-;;   (if (= (length r) 1) (cons r l) 
-;;       (adjust (cdr r) (l car r))
-;;       )
-;;   )
-
-
-
-(define (adjust x y) (cond
-		      ((= (length x) 0) (reverse x))
-		      ((= (cdr x) (car x)) (cons (car x) (car y)))
-		      ((= (cdr x) (cdr y)) (cons (car x) (car y)))
-		      (#t (cons -1 -2))
-		      )
-  )
 
 
 
